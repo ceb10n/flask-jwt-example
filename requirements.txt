@@ -1,0 +1,4 @@
+flask==1.0.2
+flask-jwt-extended==3.14.0
+flask-sqlalchemy==2.3.2
+passlib==1.7.1
