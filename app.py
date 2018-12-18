@@ -1,5 +1,6 @@
 from flask import Flask, jsonify, request
-from flask_jwt_extended import JWTManager, create_access_token, create_refresh_token
+from flask_jwt_extended import (
+    JWTManager, create_access_token, create_refresh_token, get_jwt_identity, jwt_refresh_token_required)
 from flask_sqlalchemy import SQLAlchemy
 from marshmallow import fields, Schema
 from passlib.hash import pbkdf2_sha256
@@ -34,7 +35,7 @@ class User(db.Model):
         return pbkdf2_sha256.verify(password, self.password)
 
 
-@app.route('/auth/users', methods=['POST'])
+@app.route('/users', methods=['POST'])
 def register():
     schema = UserSchema()    
     user_schema = schema.load(request.get_json()).data
@@ -44,20 +45,44 @@ def register():
     db.session.add(user)
     db.session.commit()
 
-    access_token = create_access_token(identity=user.email)
-    refresh_token = create_refresh_token(identity=user.email)
-
     return jsonify({
-        'access_token': access_token,
-        'refresh_token': refresh_token,
         'message': 'User {} created!'.format(user.email)
     }), 201
-    
 
 
 @app.route('/auth/login', methods=['POST'])
 def login():
-    pass
+    user_schema = UserSchema().load(request.get_json()).data
+    user = User.query.filter_by(email=user_schema['email']).first()
+
+    if user and user.verify_password(user_schema['password']):
+        access_token = create_access_token(identity=user.email)
+        refresh_token = create_refresh_token(identity=user.email)
+
+        return jsonify({
+            'access_token': access_token,
+            'refresh_token': refresh_token,
+            'message': 'Success'
+        }), 200
+    
+    return jsonify({
+        'message': 'Bad credentials'
+    }), 401
+
+
+@app.route('/auth/refresh', methods=['POST'])
+@jwt_refresh_token_required
+def refresh_token():
+    return jsonify({
+        'access_token': create_access_token(identity=get_jwt_identity())
+        }), 200
+
+
+@jwt.unauthorized_loader
+def missing_jwt(callback):
+    return jsonify({
+        'message': 'Authorization Header is Missing'
+    }), 401
 
 
 db.create_all()
