@@ -1,6 +1,6 @@
 from flask import Flask, jsonify, request
 from flask_jwt_extended import (
-    JWTManager, create_access_token, create_refresh_token, get_jwt_identity, jwt_refresh_token_required)
+    JWTManager, create_access_token, create_refresh_token, get_jwt_identity, jwt_refresh_token_required, jwt_required)
 from flask_sqlalchemy import SQLAlchemy
 from marshmallow import fields, Schema
 from passlib.hash import pbkdf2_sha256
@@ -83,6 +83,13 @@ def missing_jwt(callback):
     return jsonify({
         'message': 'Authorization Header is Missing'
     }), 401
+
+@app.route('/find_the_holy_grail')
+@jwt_required
+def the_holy_grail():
+    return jsonify({
+        'message': 'You have found the holy grail, huray!'
+    }), 200
 
 
 db.create_all()
