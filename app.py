@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, request
 from flask_jwt_extended import (
-    JWTManager, create_access_token, create_refresh_token, get_jwt_identity, jwt_refresh_token_required, jwt_required)
+    JWTManager, create_access_token, create_refresh_token,
+    get_jwt_identity, jwt_refresh_token_required, jwt_required)
 from flask_sqlalchemy import SQLAlchemy
 from marshmallow import fields, Schema
 from passlib.hash import pbkdf2_sha256
